@@ -1,0 +1,13 @@
+#!/bin/bash
+FILE=ssh-keys/id_ed25519
+if [ -f "$FILE" ]; then
+else
+  "ssh key does not exist, please run ./init-keys and try again."
+fi
+
+keys_text=$(cat ../ssh-keys/*.pub | xargs -I {} echo "\"{}\",")
+keys_text=$(echo $keys_text | sed 's/.$//')
+cat configuration.nix.template | sed "s/CUSTOM_SSH_KEYS/${keys_text//\//\\\/}/g" > configuration.nix
+file_path=$(nix-shell -p nixos-generators --command 'nixos-generate -f iso -c ./configuration.nix -I nixpkgs=channel:nixos-21.11' | tail -n 1)
+sudo cp $file_path nixos.iso
+sudo chown $USER nixos.iso

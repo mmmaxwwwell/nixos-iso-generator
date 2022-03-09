@@ -1,0 +1,4 @@
+#!/bin/bash
+mkdir -p ssh-keys
+rm -rf ssh-keys/id_ed25519*
+ssh-keygen -o -a 100 -t ed25519 -f ./ssh-keys/id_ed25519 -C $USER@$HOSTNAME-$(date +%s)

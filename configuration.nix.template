@@ -1,0 +1,17 @@
+{ config, pkgs, ... }:
+
+{
+  imports = [ <nixpkgs/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix> ];
+
+  services.getty.autologinUser = pkgs.lib.mkForce "";
+
+  services.openssh = {
+    enable = true;
+    passwordAuthentication = false;
+    permitRootLogin = "yes";
+  };
+
+  users.users.root.openssh.authorizedKeys.keys = [
+    CUSTOM_SSH_KEYS
+  ];
+}
