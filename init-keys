@@ -1,4 +1,13 @@
 #!/bin/bash
+read -r -p "Do you want to regenerate your ssh keypair? This will destroy your old keypair. [y/N] " response
+response=${response,,}
+if [[ "$response" =~ ^(yes|y)$ ]]; then
+  echo "Regenerating ssh keypair."
+else 
+  echo "User cancelled key generation, exiting."
+  exit
+fi
+
 mkdir -p ssh-keys
 rm -rf ssh-keys/id_ed25519*
 ssh-keygen -o -a 100 -t ed25519 -f ./ssh-keys/id_ed25519 -C $USER@$HOSTNAME-$(date +%s)

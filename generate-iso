@@ -1,13 +1,30 @@
 #!/bin/bash
+output_filename=nixos.iso
+
 FILE=ssh-keys/id_ed25519
-if [ -f "$FILE" ]; then
+if [[ -f "$FILE" ]]; then
+  echo "Generating ISO, this may take a while."
 else
   "ssh key does not exist, please run ./init-keys and try again."
 fi
 
-keys_text=$(cat ../ssh-keys/*.pub | xargs -I {} echo "\"{}\",")
+keys_text=$(cat ssh-keys/*.pub | xargs -I {} echo "\"{}\",")
 keys_text=$(echo $keys_text | sed 's/.$//')
 cat configuration.nix.template | sed "s/CUSTOM_SSH_KEYS/${keys_text//\//\\\/}/g" > configuration.nix
 file_path=$(nix-shell -p nixos-generators --command 'nixos-generate -f iso -c ./configuration.nix -I nixpkgs=channel:nixos-21.11' | tail -n 1)
-sudo cp $file_path nixos.iso
-sudo chown $USER nixos.iso
+
+read -r -p "Do you want to copy your new iso to $(keybase whoami)'s public keybase folder?[y/N] " response
+response=${response,,}
+if [[ "$response" =~ ^(yes|y)$ ]]; then
+  echo "Copying to public keybase folder..."
+  run_keybase -g &> /dev/null
+  rm -rf /keybase/public/$(keybase whoami)/$output_filename
+  install -C -m 755 -o $USER -g $USER $file_path /keybase/public/$(keybase whoami)/$output_filename
+  echo "ISO is available at https://$(keybase whoami).keybase.pub/$output_filename"
+  echo "ISO generation complete."
+else 
+  echo "User declined file copy operation. Exiting."
+  exit
+fi
+
+
